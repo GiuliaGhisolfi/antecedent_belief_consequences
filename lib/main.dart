@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'enum/emotions.dart';
 import 'note.dart';
@@ -96,10 +97,54 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             child: const Text('Aggiungi'),
           ),
+          CloseButton(
+            onPressed: () {
+              _saveTableState(rows.map((row) => [row.antecedent, row.belief, row.consequence, row.emotion.toString()]).toList());
+              Navigator.of(context).pop();
+            },
+          )
         ],
       );
     },
   );
+  }
+
+  void _saveTableState(List<List<String>> tableData) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<List<String>> serializedTable = tableData.map((row) => row.toList()).toList();
+
+    // save table state
+    prefs.setStringList('tableData', serializedTable.map((row) => row.join(',')).toList());
+  }
+
+  Future<List<List<String>>> _loadTableState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? serializedTable = prefs.getStringList('tableData');
+    
+    // return previously table state (if not null)
+    if (serializedTable != null) {
+      List<List<String>> tableData = serializedTable.map((row) => row.split(',')).toList();
+      return tableData;
+    } else {
+      return [];
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTableState().then((tableData) {
+      setState(() {
+        rows = tableData.map((row) {
+          return Note(
+            antecedent: row[0],
+            belief: row[1],
+            consequence: row[2],
+            emotion: Emotion.values.firstWhere((element) => element.toString() == row[3])
+          );
+        }).toList();
+      });
+    });
   }
 
   @override
@@ -128,10 +173,19 @@ class _MyHomePageState extends State<MyHomePage> {
           }).toList(),
         ),
       ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: _showDialog,
         child: const Icon(Icons.add),
       ),
+      persistentFooterButtons: [
+        CloseButton(
+          onPressed: () {
+            _saveTableState(rows.map((row) => [row.antecedent, row.belief, row.consequence, row.emotion.toString()]).toList());
+            Navigator.of(context).pop();
+          },
+        )
+      ],
     );
   }
 }
