@@ -93,16 +93,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ElevatedButton(
             onPressed: () {
               _addLine(antecedent, belief, consequence, selectedEmotion);
+              _saveTableState(rows.map((row) => [row.antecedent, row.belief, row.consequence, row.emotion.toString()]).toList());
               Navigator.of(context).pop();
             },
             child: const Text('Aggiungi'),
           ),
-          CloseButton(
-            onPressed: () {
-              _saveTableState(rows.map((row) => [row.antecedent, row.belief, row.consequence, row.emotion.toString()]).toList());
-              Navigator.of(context).pop();
-            },
-          )
         ],
       );
     },
@@ -176,16 +171,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
       floatingActionButton: FloatingActionButton(
         onPressed: _showDialog,
+        tooltip: 'Add new line',
         child: const Icon(Icons.add),
       ),
-      persistentFooterButtons: [
-        CloseButton(
-          onPressed: () {
-            _saveTableState(rows.map((row) => [row.antecedent, row.belief, row.consequence, row.emotion.toString()]).toList());
-            Navigator.of(context).pop();
-          },
-        )
-      ],
     );
   }
 }
