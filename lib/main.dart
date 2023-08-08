@@ -1,9 +1,13 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'enum/emotions.dart';
+import 'enum/rabbia.dart';
+import 'enum/paura.dart';
+import 'enum/tristezza.dart';
+import 'enum/disgusto.dart';
+import 'enum/felicita.dart';
+import 'enum/sorpresa.dart';
 import 'note.dart';
 
 void main() {
@@ -39,14 +43,16 @@ class _MyHomePageState extends State<MyHomePage> {
   List<List<String>> tableData = [];
   List<Note> rows = [];
 
-  void _addLine(String antecedent, String belief, String consequence, dynamic emotion, dynamic secondaryEmotion) {
+  void _addLine(String antecedent, String belief, String consequence, dynamic emotion, 
+    dynamic secondaryEmotion, dynamic selectedTertiaryEmotions) {
     setState(() {
       rows.add(Note(
         antecedent: antecedent,
         belief: belief,
         consequence: consequence,
         emotion: emotion,
-        secondaryEmotion: secondaryEmotion
+        secondaryEmotion: secondaryEmotion,
+        selectedTertiaryEmotions: selectedTertiaryEmotions
       ));
     });
   }
@@ -54,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<List<dynamic>> _addEmotion() async {
     Emotion selectedEmotion = Emotion.values[0];
     dynamic selectedSecondaryEmotion = Nessuna.values[0];
+    dynamic selectedTertiaryEmotion = Nessuna.values[0];
 
     final selectedEmotions = await showDialog<List<dynamic>>(
       context: context,
@@ -83,8 +90,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  selectedSecondaryEmotion = await _addSecondaryEmotion(selectedEmotion);
-                  Navigator.of(context).pop([selectedEmotion, selectedSecondaryEmotion]);
+                  [selectedSecondaryEmotion, selectedTertiaryEmotion] = await _addSecondaryEmotionGivenPrimary(
+                    selectedEmotion);
+                  Navigator.of(context).pop([selectedEmotion, selectedSecondaryEmotion, selectedTertiaryEmotion]);
                 },
                 child: const Text('Inserisci emozione secondaria'),
               ),
@@ -93,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop([selectedEmotion, selectedSecondaryEmotion]);
+                Navigator.of(context).pop([selectedEmotion, selectedSecondaryEmotion, selectedTertiaryEmotion]);
               },
               child: const Text('Aggiungi'),
             ),
@@ -105,70 +113,40 @@ class _MyHomePageState extends State<MyHomePage> {
     return selectedEmotions!;
   }
 
-  Future<dynamic> _addSecondaryEmotion(Emotion emotion) async{
+  Future<List<dynamic>> _addSecondaryEmotionGivenPrimary(Emotion emotion) async{
+    List<dynamic> secondaryEmotionList = [];
+    List<dynamic> tertiaryEmotionList = [];
+
     switch (emotion) {
       case Emotion.rabbia:
-        return await _addRabbia();
+        secondaryEmotionList = Rabbia.values;
+        tertiaryEmotionList = RabbiaAssociated.values;
       case Emotion.tristezza:
-        return await _addTristezza();
+        secondaryEmotionList = Tristezza.values;
+        tertiaryEmotionList = TristezzaAssociated.values;
       case Emotion.paura:
-        return await _addPaura();
+        secondaryEmotionList = Paura.values;
+        tertiaryEmotionList = PauraAssociated.values;
       case Emotion.disgusto:
-        return await _addDisgusto();
+        secondaryEmotionList = Disgusto.values;
+        tertiaryEmotionList = DisgustoAssociated.values;
       case Emotion.sorpresa:
-        return await _addSorpresa();
+        secondaryEmotionList = Sorpresa.values;
+        tertiaryEmotionList = SorpresaAssociated.values;
       case Emotion.felicita:
-        return await _addFelicita();
+        secondaryEmotionList = Felicita.values;
+        tertiaryEmotionList = FelicitaAssociated.values;
       case Emotion.nessuna:
-        return await _addNessuna();
+        secondaryEmotionList = Nessuna.values;
+        tertiaryEmotionList = NessunaAssociated.values;
     }
+    return await _addSecondaryEmotion(secondaryEmotionList, tertiaryEmotionList);
   }
 
-  Future<Rabbia> _addRabbia() async{
-    Rabbia selectedSecondaryEmotion = Rabbia.values[0];
-
-    await showDialog(
-      context: context, 
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Inserisci emozione secondaria'),
-          content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-                return DropdownButton<Rabbia>(
-                  value: selectedSecondaryEmotion,
-                  onChanged: (Rabbia? newValue) {
-                    setState(() {
-                      selectedSecondaryEmotion = newValue!;
-                    });
-                  },
-                  items: Rabbia.values.map((secondaryEmotion) {
-                    return DropdownMenuItem<Rabbia>(
-                      value: secondaryEmotion,
-                      child: Text(secondaryEmotion.toString()),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-          ]),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Aggiungi'),
-            ),],
-        );
-      }
-    );
-    return selectedSecondaryEmotion;
-  }
-
-  Future<Tristezza> _addTristezza() async{
-    Tristezza selectedSecondaryEmotion = Tristezza.values[0];
+  Future<List<dynamic>> _addSecondaryEmotion(List<dynamic> secondaryEmotionList, List<dynamic> tertiaryEmotionList) async{
+    dynamic selectedSecondaryEmotion = secondaryEmotionList[0];
+    dynamic selectedTertiaryEmotion = tertiaryEmotionList[0];
+    int selectedEmotionIndex = 0;
 
     await showDialog(
       context: context, 
@@ -180,15 +158,16 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
            StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
-                return DropdownButton<Tristezza>(
+                return DropdownButton<dynamic>(
                   value: selectedSecondaryEmotion,
-                  onChanged: (Tristezza? newValue) {
+                  onChanged: (dynamic newValue) {
                     setState(() {
                       selectedSecondaryEmotion = newValue!;
+                      selectedEmotionIndex = secondaryEmotionList.indexOf(selectedSecondaryEmotion);
                     });
                   },
-                  items: Tristezza.values.map((secondaryEmotion) {
-                    return DropdownMenuItem<Tristezza>(
+                  items: secondaryEmotionList.map((secondaryEmotion) {
+                    return DropdownMenuItem<dynamic>(
                       value: secondaryEmotion,
                       child: Text(secondaryEmotion.toString()),
                     );
@@ -196,130 +175,64 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               },
             ),
-          ]),
-          actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Aggiungi'),
-            ),],
-        );
-      }
-    );
-    return selectedSecondaryEmotion;
-  }
-
-  Future<Paura> _addPaura() async{
-    Paura selectedSecondaryEmotion = Paura.values[0];
-
-    await showDialog(
-      context: context, 
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Inserisci emozione secondaria'),
-          content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-              return DropdownButton<Paura>(
-                value: selectedSecondaryEmotion,
-                onChanged: (Paura? newValue) {
-                  setState(() {
-                    selectedSecondaryEmotion = newValue!;
-                  });
+                onPressed: () async {
+                  selectedTertiaryEmotion = await _addTertiaryEmotion(selectedEmotionIndex, tertiaryEmotionList);
+                  Navigator.of(context).pop([selectedSecondaryEmotion, selectedTertiaryEmotion]);
                 },
-                items: Paura.values.map((secondaryEmotion) {
-                  return DropdownMenuItem<Paura>(
-                    value: secondaryEmotion,
-                    child: Text(secondaryEmotion.toString()),
-                  );
-                }).toList(),
-              );
-              },
-            ),
+                child: const Text('Inserisci emozione terziaria'),
+              ),
           ]),
           actions: [
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop([selectedSecondaryEmotion, selectedTertiaryEmotion]);
               },
               child: const Text('Aggiungi'),
             ),],
         );
       }
     );
-    return selectedSecondaryEmotion;
+    return [selectedSecondaryEmotion, selectedTertiaryEmotion];
   }
 
-  Future<Disgusto> _addDisgusto() async{
-    Disgusto selectedSecondaryEmotion = Disgusto.values[0];
+  List<dynamic> getSelectableTertiaryEmotions(
+    int selectedEmotionIndex , List<dynamic> tertiaryEmotionList
+    ) {
+    final List<dynamic> selectableTertiaryEmotions = [];
+
+    selectableTertiaryEmotions.add(tertiaryEmotionList[selectedEmotionIndex * 2]);
+    selectableTertiaryEmotions.add(tertiaryEmotionList[selectedEmotionIndex * 2 + 1]);
+
+    return selectableTertiaryEmotions;
+  } 
+
+  Future<dynamic> _addTertiaryEmotion(int selectedEmotionIndex, List<dynamic> tertiaryEmotionList) async{
+    List<dynamic> selectableTertiaryEmotions = getSelectableTertiaryEmotions(
+                      selectedEmotionIndex, tertiaryEmotionList);
+    dynamic selectedTertiaryEmotion = selectableTertiaryEmotions[0];
 
     await showDialog(
       context: context, 
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Inserisci emozione secondaria'),
+          title: const Text('Inserisci emozione terziaria'),
           content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          children: [ 
             StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
-                return DropdownButton<Disgusto>(
-                  value: selectedSecondaryEmotion,
-                  onChanged: (Disgusto? newValue) {
+                return DropdownButton<dynamic>(
+                  value: selectedTertiaryEmotion,
+                  onChanged: (dynamic newValue) {
                     setState(() {
-                      selectedSecondaryEmotion = newValue!;
+                      selectedTertiaryEmotion = newValue!;
                     });
                   },
-                  items: Disgusto.values.map((secondaryEmotion) {
-                    return DropdownMenuItem<Disgusto>(
-                      value: secondaryEmotion,
-                      child: Text(secondaryEmotion.toString()),
-                    );
-                  }).toList(),
-                );
-              },
-            )
-          ]),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Aggiungi'),
-            ),],
-        );
-      }
-    );
-    return selectedSecondaryEmotion;
-  }
-
-  Future<Sorpresa> _addSorpresa() async{
-    Sorpresa selectedSecondaryEmotion = Sorpresa.values[0];
-
-    await showDialog(
-      context: context, 
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Inserisci emozione secondaria'),
-          content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-                return DropdownButton<Sorpresa>(
-                  value: selectedSecondaryEmotion,
-                  onChanged: (Sorpresa? newValue) {
-                    setState(() {
-                      selectedSecondaryEmotion = newValue!;
-                    });
-                  },
-                  items: Sorpresa.values.map((secondaryEmotion) {
-                    return DropdownMenuItem<Sorpresa>(
-                      value: secondaryEmotion,
-                      child: Text(secondaryEmotion.toString()),
+                  items: selectableTertiaryEmotions.map((tertiaryEmotion) {
+                    return DropdownMenuItem<dynamic>(
+                      value: tertiaryEmotion,
+                      child: Text(tertiaryEmotion.toString()),
                     );
                   }).toList(),
                 );
@@ -329,100 +242,14 @@ class _MyHomePageState extends State<MyHomePage> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(selectedTertiaryEmotion);
               },
               child: const Text('Aggiungi'),
             ),],
         );
       }
     );
-    return selectedSecondaryEmotion;
-  }
-
-  Future<Felicita> _addFelicita() async{
-    Felicita selectedSecondaryEmotion = Felicita.values[0];
-
-    await showDialog(
-      context: context, 
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Inserisci emozione secondaria'),
-          content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-                return DropdownButton<Felicita>(
-                  value: selectedSecondaryEmotion,
-                  onChanged: (Felicita? newValue) {
-                    setState(() {
-                      selectedSecondaryEmotion = newValue!;
-                    });
-                  },
-                  items: Felicita.values.map((secondaryEmotion) {
-                    return DropdownMenuItem<Felicita>(
-                      value: secondaryEmotion,
-                      child: Text(secondaryEmotion.toString()),
-                    );
-                  }).toList(),
-                );
-              },
-            )
-          ]),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Aggiungi'),
-            ),],
-        );
-      }
-    );
-    return selectedSecondaryEmotion;
-  }
-
-  Future<Nessuna> _addNessuna() async{
-    Nessuna selectedSecondaryEmotion = Nessuna.values[0];
-
-    await showDialog(
-      context: context, 
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Inserisci emozione secondaria'),
-          content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-                return DropdownButton<Nessuna>(
-                  value: selectedSecondaryEmotion,
-                  onChanged: (Nessuna? newValue) {
-                    setState(() {
-                      selectedSecondaryEmotion = newValue!;
-                    });
-                  },
-                  items: Nessuna.values.map((secondaryEmotion) {
-                    return DropdownMenuItem<Nessuna>(
-                      value: secondaryEmotion,
-                      child: Text(secondaryEmotion.toString()),
-                    );
-                  }).toList(),
-                );
-              },
-            )
-          ]),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Aggiungi'),
-            ),],
-        );
-      }
-    );
-    return selectedSecondaryEmotion;
+    return selectedTertiaryEmotion;
   }
 
   Future<void> _saveTableState(List<List<String>> tableData) async {
@@ -440,6 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
     List<dynamic> selectedEmotions = [];
     dynamic selectedEmotion = Emotion.values[0];
     dynamic selectedSecondaryEmotion = Nessuna.values[0];
+    dynamic selectedTertiaryEmotions = Nessuna.values[0];
 
     showDialog(
       context: context,
@@ -461,6 +289,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onChanged: (value) => consequence = value,
                 decoration: const InputDecoration(labelText: 'Consequence: emozioni, comportamenti, reazioni'),
               ),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () async{
                   selectedEmotions = await _addEmotion(); 
@@ -476,10 +305,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   setState(() {
                       selectedEmotion = selectedEmotions[0];
                       selectedSecondaryEmotion = selectedEmotions[1];
+                      selectedTertiaryEmotions = selectedEmotions[2];
                     });
                 }
-                _addLine(antecedent, belief, consequence, selectedEmotion, selectedSecondaryEmotion);
-                _saveTableState(rows.map((row) => [row.antecedent, row.belief, row.consequence, row.emotion.toString(), row.secondaryEmotion.toString()]).toList());
+                _addLine(antecedent, belief, consequence, selectedEmotion, selectedSecondaryEmotion, selectedTertiaryEmotions);
+                _saveTableState(rows.map((row) => [row.antecedent, row.belief, row.consequence, row.emotion.toString(), 
+                  row.secondaryEmotion.toString(), row.selectedTertiaryEmotions.toString()]).toList());
                 Navigator.of(context).pop();
               },
               child: const Text('Aggiungi'),
@@ -523,6 +354,7 @@ class _MyHomePageState extends State<MyHomePage> {
             DataColumn(label: Text('Consequence'), tooltip: 'emozioni, comportamenti, reazioni'),
             DataColumn(label: Text('Primary emotion'), tooltip: 'emozione primaria'),
             DataColumn(label: Text('Secondary emotion'), tooltip: 'emozione secondaria'),
+            DataColumn(label: Text('Tertiary emotion'), tooltip: 'emozione terziaria'),
           ],
           rows: rows.map((row) {
             return DataRow(
@@ -532,6 +364,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 DataCell(Text(row.consequence)),
                 DataCell(Text(row.emotion.toString())),
                 DataCell(Text(row.secondaryEmotion.toString())),
+                DataCell(Text(row.selectedTertiaryEmotions.toString())),
               ],
             );
           }).toList(),

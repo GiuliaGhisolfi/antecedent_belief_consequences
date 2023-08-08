@@ -5,6 +5,7 @@ class Note {
   final String consequence; //consequence: emozioni, comportamenti, reazioni;
   final dynamic emotion; //emozione primaria
   final dynamic secondaryEmotion; //emozione secondaria
+  final dynamic selectedTertiaryEmotions; //emozioni terziarie selezionate
 
   const Note({
     required this.antecedent,
@@ -12,5 +13,6 @@ class Note {
     required this.consequence,
     required this.emotion,
     required this.secondaryEmotion,
+    required this.selectedTertiaryEmotions,
   });
 }
