@@ -283,11 +283,11 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               TextField(
                 onChanged: (value) => belief = value,
-                decoration: const InputDecoration(labelText: 'Belief: pensiero, convinzione per valutare lo stimolo di partenza'),
+                decoration: const InputDecoration(labelText: 'Belief: pensiero, convinzione'),
               ),
               TextField(
                 onChanged: (value) => consequence = value,
-                decoration: const InputDecoration(labelText: 'Consequence: emozioni, comportamenti, reazioni'),
+                decoration: const InputDecoration(labelText: 'Consequence: emozioni'),
               ),
               const SizedBox(height: 10),
               ElevatedButton(
@@ -357,7 +357,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Antecedent, Belief, Consequence', textWidthBasis: TextWidthBasis.longestLine),
+        title: const Text('Antecedent, Belief, Consequence', style: TextStyle(
+              fontSize: 18), textWidthBasis: TextWidthBasis.longestLine),
         backgroundColor: const Color.fromARGB(255, 129, 199, 243),
       ),
       body: SingleChildScrollView(
