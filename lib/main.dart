@@ -324,17 +324,32 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _loadTableState();
+    _loadTableState().then((tableData) {
+      setState(() {
+        rows = tableData.map((row) {
+          return Note(
+            antecedent: row[0],
+            belief: row[1],
+            consequence: row[2],
+            emotion: Emotion.values.firstWhere((element) => element.toString() == row[3]),
+            secondaryEmotion: Emotion.values.firstWhere((element) => element.toString() == row[4]),
+            selectedTertiaryEmotions: Emotion.values.firstWhere((element) => element.toString() == row[5])
+          );
+        }).toList();
+      });
+    });
   }
 
-  Future<void> _loadTableState() async {
+  Future<List<List<String>>> _loadTableState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String>? serializedTable = prefs.getStringList('tableData');
 
+    // return previously table state (if not null)
     if (serializedTable != null) {
-      setState(() {
-        tableData = serializedTable.map((row) => row.split(',')).toList();
-      });
+      List<List<String>> tableData = serializedTable.map((row) => row.split(',')).toList();
+      return tableData;
+    } else {
+      return [];
     }
   }
 
