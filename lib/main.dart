@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -50,58 +52,58 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<List<dynamic>> _addEmotion() async {
-  Emotion selectedEmotion = Emotion.values[0];
-  dynamic selectedSecondaryEmotion = Nessuna.values[0];
+    Emotion selectedEmotion = Emotion.values[0];
+    dynamic selectedSecondaryEmotion = Nessuna.values[0];
 
-  final selectedEmotions = await showDialog<List<dynamic>>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Inserisci emozione primaria'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-                return DropdownButton<Emotion>(
-                  value: selectedEmotion,
-                  onChanged: (Emotion? newValue) {
-                    setState(() {
-                      selectedEmotion = newValue!;
-                    });
-                  },
-                  items: Emotion.values.map((emotion) {
-                    return DropdownMenuItem<Emotion>(
-                      value: emotion,
-                      child: Text(emotion.toString()),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
+    final selectedEmotions = await showDialog<List<dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Inserisci emozione primaria'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return DropdownButton<Emotion>(
+                    value: selectedEmotion,
+                    onChanged: (Emotion? newValue) {
+                      setState(() {
+                        selectedEmotion = newValue!;
+                      });
+                    },
+                    items: Emotion.values.map((emotion) {
+                      return DropdownMenuItem<Emotion>(
+                        value: emotion,
+                        child: Text(emotion.toString()),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  selectedSecondaryEmotion = await _addSecondaryEmotion(selectedEmotion);
+                  Navigator.of(context).pop([selectedEmotion, selectedSecondaryEmotion]);
+                },
+                child: const Text('Inserisci emozione secondaria'),
+              ),
+            ],
+          ),
+          actions: [
             ElevatedButton(
-              onPressed: () async {
-                selectedSecondaryEmotion = await _addSecondaryEmotion(selectedEmotion);
+              onPressed: () {
                 Navigator.of(context).pop([selectedEmotion, selectedSecondaryEmotion]);
               },
-              child: const Text('Inserisci emozione secondaria'),
+              child: const Text('Aggiungi'),
             ),
           ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop([selectedEmotion, selectedSecondaryEmotion]);
-            },
-            child: const Text('Aggiungi'),
-          ),
-        ],
-      );
-    },
-  );
+        );
+      },
+    );
 
-  return selectedEmotions!;
-}
+    return selectedEmotions!;
+  }
 
   Future<dynamic> _addSecondaryEmotion(Emotion emotion) async{
     switch (emotion) {
@@ -470,10 +472,12 @@ class _MyHomePageState extends State<MyHomePage> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                setState(() {
-                    selectedEmotion = selectedEmotions[0];
-                    selectedSecondaryEmotion = selectedEmotions[1];
-                  });
+                if (selectedEmotions.isNotEmpty) {
+                  setState(() {
+                      selectedEmotion = selectedEmotions[0];
+                      selectedSecondaryEmotion = selectedEmotions[1];
+                    });
+                }
                 _addLine(antecedent, belief, consequence, selectedEmotion, selectedSecondaryEmotion);
                 _saveTableState(rows.map((row) => [row.antecedent, row.belief, row.consequence, row.emotion.toString(), row.secondaryEmotion.toString()]).toList());
                 Navigator.of(context).pop();
@@ -507,25 +511,27 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ABC: Antecedent, Belief, Consequence'),
+        title: const Text('Antecedent, Belief, Consequence', textWidthBasis: TextWidthBasis.longestLine),
+        backgroundColor: const Color.fromARGB(255, 129, 199, 243),
       ),
       body: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
         child: DataTable(
           columns: const <DataColumn>[
-            DataColumn(label: SizedBox(width: 300, child: Text('Antecedent')), tooltip: 'stimolo di partenza'),
-            DataColumn(label: SizedBox(width: 300, child: Text('Belief')), tooltip: 'pensiero, convinzione per valutare lo stimolo di partenza'),
-            DataColumn(label: SizedBox(width: 300, child: Text('Consequence')), tooltip: 'emozioni, comportamenti, reazioni'),
-            DataColumn(label: SizedBox(width: 200, child: Text('Primary emotion')), tooltip: 'emozione primaria'),
-            DataColumn(label: SizedBox(width: 200, child: Text('Secondary emotion')), tooltip: 'emozione secondaria'),
+            DataColumn(label: Text('Antecedent'), tooltip: 'stimolo di partenza'),
+            DataColumn(label: Text('Belief'), tooltip: 'pensiero, convinzione per valutare lo stimolo di partenza'),
+            DataColumn(label: Text('Consequence'), tooltip: 'emozioni, comportamenti, reazioni'),
+            DataColumn(label: Text('Primary emotion'), tooltip: 'emozione primaria'),
+            DataColumn(label: Text('Secondary emotion'), tooltip: 'emozione secondaria'),
           ],
           rows: rows.map((row) {
             return DataRow(
               cells: [
-                DataCell(SizedBox(width: 300, child: Text(row.antecedent))),
-                DataCell(SizedBox(width: 300, child: Text(row.belief))),
-                DataCell(SizedBox(width: 300, child: Text(row.consequence))),
-                DataCell(SizedBox(width: 200, child: Text(row.emotion.toString()))),
-                DataCell(SizedBox(width: 200, child: Text(row.secondaryEmotion.toString()))),
+                DataCell(Text(row.antecedent)),
+                DataCell(Text(row.belief)),
+                DataCell(Text(row.consequence)),
+                DataCell(Text(row.emotion.toString())),
+                DataCell(Text(row.secondaryEmotion.toString())),
               ],
             );
           }).toList(),
