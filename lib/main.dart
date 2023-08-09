@@ -66,7 +66,9 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Inserisci emozione primaria'),
+          //backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.fromLTRB(0, 0, 0, 250),
+          title: const Text('Inserisci emozione'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -88,13 +90,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 },
               ),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () async {
                   [selectedSecondaryEmotion, selectedTertiaryEmotion] = await _addSecondaryEmotionGivenPrimary(
                     selectedEmotion);
                   Navigator.of(context).pop([selectedEmotion, selectedSecondaryEmotion, selectedTertiaryEmotion]);
                 },
-                child: const Text('Inserisci emozione secondaria'),
+                child: const Text('Inserisci un altro livello di emozione'),
               ),
             ],
           ),
@@ -103,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Navigator.of(context).pop([selectedEmotion, selectedSecondaryEmotion, selectedTertiaryEmotion]);
               },
-              child: const Text('Aggiungi'),
+              child: const Text('Salva emozione'),
             ),
           ],
         );
@@ -152,7 +155,9 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context, 
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Inserisci emozione secondaria'),
+          //backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+          title: const Text('Inserisci emozione'),
           content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -175,12 +180,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               },
             ),
+            const SizedBox(height: 10),
             ElevatedButton(
                 onPressed: () async {
                   selectedTertiaryEmotion = await _addTertiaryEmotion(selectedEmotionIndex, tertiaryEmotionList);
                   Navigator.of(context).pop([selectedSecondaryEmotion, selectedTertiaryEmotion]);
                 },
-                child: const Text('Inserisci emozione terziaria'),
+                child: const Text('Inserisci un altro livello di emozione'),
               ),
           ]),
           actions: [
@@ -188,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Navigator.of(context).pop([selectedSecondaryEmotion, selectedTertiaryEmotion]);
               },
-              child: const Text('Aggiungi'),
+              child: const Text('Salva emozioni'),
             ),],
         );
       }
@@ -216,7 +222,9 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context, 
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Inserisci emozione terziaria'),
+          //backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.fromLTRB(0, 250, 0, 0),
+          title: const Text('Inserisci emozione'),
           content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [ 
@@ -244,7 +252,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Navigator.of(context).pop(selectedTertiaryEmotion);
               },
-              child: const Text('Aggiungi'),
+              child: const Text('Inserisci e salva tutti i livelli di emozione'),
             ),],
         );
       }
@@ -289,12 +297,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 onChanged: (value) => consequence = value,
                 decoration: const InputDecoration(labelText: 'Consequence: emozioni'),
               ),
+              const SizedBox(height: 10), // add an empty space
               const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () async{
                   selectedEmotions = await _addEmotion(); 
                 },
-                child: const Text('Inserisci emozione primaria'),
+                child: const Text('Inserisci emozione'),
               ),
             ],
           ),
@@ -313,7 +322,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   row.secondaryEmotion.toString(), row.selectedTertiaryEmotions.toString()]).toList());
                 Navigator.of(context).pop();
               },
-              child: const Text('Aggiungi'),
+              child: const Text('Salva♡'),
             ),
           ],
         );
@@ -358,7 +367,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Antecedent, Belief, Consequence', style: TextStyle(
-              fontSize: 18), textWidthBasis: TextWidthBasis.longestLine),
+              fontSize: 19), textWidthBasis: TextWidthBasis.longestLine),
         backgroundColor: const Color.fromARGB(255, 129, 199, 243),
       ),
       body: SingleChildScrollView(
