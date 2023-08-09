@@ -6,6 +6,8 @@ class Note {
   final dynamic emotion; //emozione primaria
   final dynamic secondaryEmotion; //emozione secondaria
   final dynamic selectedTertiaryEmotions; //emozioni terziarie selezionate
+  //final String? currentPlace; //posizione attuale
+  final DateTime currentDateTime; //data e ora di creazione della nota
 
   const Note({
     required this.antecedent,
@@ -14,5 +16,7 @@ class Note {
     required this.emotion,
     required this.secondaryEmotion,
     required this.selectedTertiaryEmotions,
+    //required this.currentPlace,
+    required this.currentDateTime,
   });
 }

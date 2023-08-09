@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+//import 'package:geolocator/geolocator.dart';
+//import 'package:geocoding/geocoding.dart';
 
 import 'enum/emotions.dart';
 import 'enum/rabbia.dart';
@@ -24,7 +27,16 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Note> rows = [];
 
   void _addLine(String antecedent, String belief, String consequence, dynamic emotion, 
-    dynamic secondaryEmotion, dynamic selectedTertiaryEmotions) {
+    dynamic secondaryEmotion, dynamic selectedTertiaryEmotions) async{
+
+    /*Position currentPosition = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+    List<Placemark> placemarks = await placemarkFromCoordinates(
+      currentPosition.latitude, currentPosition.longitude);
+    String? currentPlace = placemarks.isNotEmpty ? placemarks[0].locality : '';*/
+    DateTime currentDateTime = DateTime.now();
+    
     setState(() {
       rows.add(Note(
         antecedent: antecedent,
@@ -32,7 +44,9 @@ class _MyHomePageState extends State<MyHomePage> {
         consequence: consequence,
         emotion: emotion,
         secondaryEmotion: secondaryEmotion,
-        selectedTertiaryEmotions: selectedTertiaryEmotions
+        selectedTertiaryEmotions: selectedTertiaryEmotions,
+        //currentPlace: currentPlace,
+        currentDateTime: currentDateTime
       ));
     });
   }
@@ -384,7 +398,9 @@ class _MyHomePageState extends State<MyHomePage> {
             consequence: row[2],
             emotion: Emotion.values.firstWhere((element) => element.toString() == row[3]),
             secondaryEmotion: Emotion.values.firstWhere((element) => element.toString() == row[4]),
-            selectedTertiaryEmotions: Emotion.values.firstWhere((element) => element.toString() == row[5])
+            selectedTertiaryEmotions: Emotion.values.firstWhere((element) => element.toString() == row[5]),
+            //currentPlace: row[6],
+            currentDateTime: DateTime.parse(row[6])
           );
         }).toList();
       });
@@ -410,7 +426,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: const Text('Antecedent, Belief, Consequence', style: TextStyle(
               fontSize: 19), textWidthBasis: TextWidthBasis.longestLine),
-        backgroundColor: const Color.fromARGB(255, 131, 202, 247),
+        backgroundColor: const Color.fromARGB(255, 179, 220, 245),
       ),
       body: SingleChildScrollView(
         scrollDirection: Axis.vertical,
@@ -431,43 +447,60 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget buildSingleRowTable(Note row) {
-    return Card(
-      color: const Color.fromARGB(255, 200, 234, 255),
-      child: DataTable(
-        columns: const <DataColumn>[
-          DataColumn(label: Text('Stato d\'animo ♡')),
-        ],
-        rows: [
-          DataRow(
-            cells: [
-              DataCell(Tooltip(
-                message: 'Antecedent: stimolo di partenza',
-                child: Text('Antecedent: ${row.antecedent}', textWidthBasis: TextWidthBasis.longestLine),
-              ))
+    return IntrinsicHeight(
+      child: Container(
+        child:Card(
+          color: const Color.fromARGB(255, 201, 230, 248),
+          child: DataTable(
+            columns: const <DataColumn>[
+              DataColumn(label: Text('Stato d\'animo ♡')),
+            ],
+            rows: [
+              DataRow(
+                cells: [
+                  DataCell(Tooltip(
+                    message: 'Antecedent: stimolo di partenza',
+                    child: Text('Antecedent: ${row.antecedent}', textWidthBasis: TextWidthBasis.longestLine),
+                  ))
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(Tooltip(
+                    message: 'Belief: pensiero, convinzione per valutare lo stimolo di partenza',
+                    child: Text('Belief: ${row.belief}', textWidthBasis: TextWidthBasis.longestLine),
+                  ))
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(Tooltip(
+                    message: 'Consequence: emozioni, comportamenti, reazioni',
+                    child: Text('Consequence: ${row.consequence}', textWidthBasis: TextWidthBasis.longestLine),
+                  ))
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(buildEmotionCell(row.emotion, row.secondaryEmotion, row.selectedTertiaryEmotions)),
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(
+                    Row(
+                      children: [
+                        //Text(row.currentPlace ?? ''),
+                        //const SizedBox(width: 8),
+                        Text(DateFormat('EEEE, yyyy-MM-dd HH:mm:ss').format(row.currentDateTime)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-          DataRow(
-            cells: [
-              DataCell(Tooltip(
-                message: 'Belief: pensiero, convinzione per valutare lo stimolo di partenza',
-                child: Text('Belief: ${row.belief}', textWidthBasis: TextWidthBasis.longestLine),
-              ))
-            ],
-          ),
-          DataRow(
-            cells: [
-              DataCell(Tooltip(
-                message: 'Consequence: emozioni, comportamenti, reazioni',
-                child: Text('Consequence: ${row.consequence}', textWidthBasis: TextWidthBasis.longestLine),
-              ))
-            ],
-          ),
-          DataRow(
-            cells: [
-              DataCell(buildEmotionCell(row.emotion, row.secondaryEmotion, row.selectedTertiaryEmotions)),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
