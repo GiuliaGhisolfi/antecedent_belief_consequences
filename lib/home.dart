@@ -404,18 +404,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  DataCell buildEmotionCell(dynamic emotion, dynamic secondaryEmotion, dynamic tertiaryEmotions) {
-    if (emotion == Emotion.nessuna) {
-      return const DataCell(Text(''));
-    } else if (secondaryEmotion == Nessuna.nessuna) {
-      return DataCell(Text(emotion.toString()));
-    } else if (tertiaryEmotions == Nessuna.nessuna) {
-      return DataCell(Text('$emotion, $secondaryEmotion'));
-    } else {
-      return DataCell(Text('$emotion, $secondaryEmotion, $tertiaryEmotions'));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -426,22 +414,10 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: SingleChildScrollView(
         scrollDirection: Axis.vertical,
-        child: DataTable(
-          columns: const <DataColumn>[
-            DataColumn(label: Text('Antecedent'), tooltip: 'stimolo di partenza'),
-            DataColumn(label: Text('Belief'), tooltip: 'pensiero, convinzione per valutare lo stimolo di partenza'),
-            DataColumn(label: Text('Consequence'), tooltip: 'emozioni, comportamenti, reazioni'),
-            DataColumn(label: Text('Emotion'), tooltip: 'emozione'),
-          ],
-          rows: rows.map((row) {
-            return DataRow(
-              cells: [
-                DataCell(Text(row.antecedent)),
-                DataCell(Text(row.belief)),
-                DataCell(Text(row.consequence)),
-                buildEmotionCell(row.emotion, row.secondaryEmotion, row.selectedTertiaryEmotions),
-              ],
-            );
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: rows.map((row) {
+            return buildSingleRowTable(row);
           }).toList(),
         ),
       ),
@@ -452,5 +428,62 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Widget buildSingleRowTable(Note row) {
+    return Card(
+      color: const Color.fromARGB(255, 200, 234, 255),
+      child: DataTable(
+        columns: const <DataColumn>[
+          DataColumn(label: Text('Stato d\'animo ♡')),
+        ],
+        rows: [
+          DataRow(
+            cells: [
+              DataCell(Tooltip(
+                message: 'Antecedent: stimolo di partenza',
+                child: Text('Antecedent: ${row.antecedent}', textWidthBasis: TextWidthBasis.longestLine),
+              ))
+            ],
+          ),
+          DataRow(
+            cells: [
+              DataCell(Tooltip(
+                message: 'Belief: pensiero, convinzione per valutare lo stimolo di partenza',
+                child: Text('Belief: ${row.belief}', textWidthBasis: TextWidthBasis.longestLine),
+              ))
+            ],
+          ),
+          DataRow(
+            cells: [
+              DataCell(Tooltip(
+                message: 'Consequence: emozioni, comportamenti, reazioni',
+                child: Text('Consequence: ${row.consequence}', textWidthBasis: TextWidthBasis.longestLine),
+              ))
+            ],
+          ),
+          DataRow(
+            cells: [
+              DataCell(buildEmotionCell(row.emotion, row.secondaryEmotion, row.selectedTertiaryEmotions)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildEmotionCell(dynamic emotion, dynamic secondaryEmotion, dynamic tertiaryEmotions) {
+    String emotionText = '';
+    if (emotion == Emotion.nessuna) {
+      emotionText = 'Nessuna emozione inserita';
+    } else if (secondaryEmotion == Nessuna.nessuna) {
+      emotionText = 'Emozione: $emotion';
+    } else if (tertiaryEmotions == Nessuna.nessuna) {
+      emotionText = 'Emozione: $emotion, $secondaryEmotion';
+    } else {
+      emotionText = 'Emozione: $emotion, $secondaryEmotion, $tertiaryEmotions';
+    }
+
+    return Text(emotionText);
   }
 }

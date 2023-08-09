@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'ABC',
       theme: ThemeData(
-        scaffoldBackgroundColor: const Color.fromARGB(255, 180, 226, 255),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 200, 234, 255),
         colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 150, 208, 245)),
         useMaterial3: true,
       ),
