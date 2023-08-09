@@ -459,24 +459,48 @@ class _MyHomePageState extends State<MyHomePage> {
               DataRow(
                 cells: [
                   DataCell(Tooltip(
-                    message: 'Antecedent: stimolo di partenza',
-                    child: Text('Antecedent: ${row.antecedent}', textWidthBasis: TextWidthBasis.longestLine),
+                    message: row.antecedent,
+                    child: Text.rich(
+                      TextSpan(
+                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+                        children: <TextSpan>[
+                          const TextSpan(text: 'Antecedent: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                          TextSpan(text: ' ${row.antecedent}', style: const TextStyle(color: Colors.black)),
+                        ],
+                      ),
+                    )
                   ))
                 ],
               ),
               DataRow(
                 cells: [
                   DataCell(Tooltip(
-                    message: 'Belief: pensiero, convinzione per valutare lo stimolo di partenza',
-                    child: Text('Belief: ${row.belief}', textWidthBasis: TextWidthBasis.longestLine),
+                    message: row.belief,
+                    child: Text.rich(
+                      TextSpan(
+                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+                        children: <TextSpan>[
+                          const TextSpan(text: 'Belief: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                          TextSpan(text: ' ${row.belief}', style: const TextStyle(color: Colors.black)),
+                        ],
+                      ),
+                    )
                   ))
                 ],
               ),
               DataRow(
                 cells: [
                   DataCell(Tooltip(
-                    message: 'Consequence: emozioni, comportamenti, reazioni',
-                    child: Text('Consequence: ${row.consequence}', textWidthBasis: TextWidthBasis.longestLine),
+                    message: row.consequence,
+                    child: Text.rich(
+                      TextSpan(
+                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+                        children: <TextSpan>[
+                          const TextSpan(text: 'Consequence: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                          TextSpan(text: ' ${row.consequence}', style: const TextStyle(color: Colors.black)),
+                        ],
+                      ),
+                    )
                   ))
                 ],
               ),
@@ -509,14 +533,21 @@ class _MyHomePageState extends State<MyHomePage> {
     String emotionText = '';
     if (emotion == Emotion.nessuna) {
       emotionText = 'Nessuna emozione inserita';
+      return Text(emotionText, style: const TextStyle(color: Color.fromARGB(255, 119, 187, 230)));
     } else if (secondaryEmotion == Nessuna.nessuna) {
-      emotionText = 'Emozione: $emotion';
+      emotionText = '$emotion';
     } else if (tertiaryEmotions == Nessuna.nessuna) {
-      emotionText = 'Emozione: $emotion, $secondaryEmotion';
+      emotionText = '$emotion, $secondaryEmotion';
     } else {
-      emotionText = 'Emozione: $emotion, $secondaryEmotion, $tertiaryEmotions';
+      emotionText = '$emotion, $secondaryEmotion, $tertiaryEmotions';
     }
 
-    return Text(emotionText);
+    return Text.rich(TextSpan(
+              style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+              children: <TextSpan>[
+                const TextSpan(text: 'Emozione: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                TextSpan(text: emotionText, style: const TextStyle(color: Colors.black)),
+              ],
+            ),);
   }
 }
