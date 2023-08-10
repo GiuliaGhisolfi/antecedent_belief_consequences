@@ -148,7 +148,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         //Text(row.currentPlace ?? ''),
                         //const SizedBox(width: 8),
-                        Text(DateFormat('EEEE, yyyy-MM-dd HH:mm:ss').format(row.currentDateTime)),
+                        Text(DateFormat('EEEE, yyyy-MM-dd HH:mm').format(row.currentDateTime)),
                       ],
                     ),
                   ),
@@ -528,6 +528,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                                   row.emotion.toString(), 
                                                   row.secondaryEmotion.toString(), 
                                                   row.tertiaryEmotions.toString(),
+                                                  //row.currentPlace,
                                                   row.currentDateTime
                                                   ]).toList());
                       Navigator.of(context).pop();
