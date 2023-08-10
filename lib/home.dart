@@ -12,6 +12,7 @@ import 'enum/disgusto.dart';
 import 'enum/felicita.dart';
 import 'enum/sorpresa.dart';
 import 'note.dart';
+import 'savedata.dart';
 
 
 class MyHomePage extends StatefulWidget {
@@ -44,7 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
         consequence: consequence,
         emotion: emotion,
         secondaryEmotion: secondaryEmotion,
-        selectedTertiaryEmotions: selectedTertiaryEmotions,
+        tertiaryEmotions: selectedTertiaryEmotions,
         //currentPlace: currentPlace,
         currentDateTime: currentDateTime
       ));
@@ -372,7 +373,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       }
                       _addLine(antecedent, belief, consequence, selectedEmotion, selectedSecondaryEmotion, selectedTertiaryEmotions);
                       _saveTableState(rows.map((row) => [row.antecedent, row.belief, row.consequence, row.emotion.toString(), 
-                        row.secondaryEmotion.toString(), row.selectedTertiaryEmotions.toString()]).toList());
+                        row.secondaryEmotion.toString(), row.tertiaryEmotions.toString()]).toList());
                       Navigator.of(context).pop();
                     },
                     child: const Text('Salva♡'),
@@ -392,19 +393,58 @@ class _MyHomePageState extends State<MyHomePage> {
     _loadTableState().then((tableData) {
       setState(() {
         rows = tableData.map((row) {
+          dynamic temporarySecondaryEmotion;
+          dynamic temporaryTertiaryEmotions;
+          [temporarySecondaryEmotion, temporaryTertiaryEmotions] = _emotionsFromRow(row[3], row[4], row[5]);
           return Note(
             antecedent: row[0],
             belief: row[1],
             consequence: row[2],
             emotion: Emotion.values.firstWhere((element) => element.toString() == row[3]),
-            secondaryEmotion: Emotion.values.firstWhere((element) => element.toString() == row[4]),
-            selectedTertiaryEmotions: Emotion.values.firstWhere((element) => element.toString() == row[5]),
+            secondaryEmotion: temporarySecondaryEmotion,
+            tertiaryEmotions: temporaryTertiaryEmotions,
             //currentPlace: row[6],
             currentDateTime: DateTime.parse(row[6])
           );
         }).toList();
       });
     });
+  }
+
+  List<dynamic> _emotionsFromRow(String emotion, String secondaryEmotion, String tertiaryEmotions) {
+    dynamic temporarySecondaryEmotion;
+    dynamic temporaryTertiaryEmotions;
+    switch (emotion) {
+      case 'Rabbia':
+        temporarySecondaryEmotion = Rabbia.values.firstWhere((element) => element.toString() == secondaryEmotion);
+        temporaryTertiaryEmotions = RabbiaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+        break;
+      case 'Tristezza':
+        temporarySecondaryEmotion = Tristezza.values.firstWhere((element) => element.toString() == secondaryEmotion);
+        temporaryTertiaryEmotions = TristezzaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+        break;
+      case 'Paura':
+        temporarySecondaryEmotion = Paura.values.firstWhere((element) => element.toString() == secondaryEmotion);
+        temporaryTertiaryEmotions = PauraAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+        break;
+      case 'Disgusto':
+        temporarySecondaryEmotion = Disgusto.values.firstWhere((element) => element.toString() == secondaryEmotion);
+        temporaryTertiaryEmotions = DisgustoAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+        break;
+      case 'Felicità':
+        temporarySecondaryEmotion = Felicita.values.firstWhere((element) => element.toString() == secondaryEmotion);
+        temporaryTertiaryEmotions = FelicitaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+        break;
+      case 'Sorpresa':
+        temporarySecondaryEmotion = Sorpresa.values.firstWhere((element) => element.toString() == secondaryEmotion);
+        temporaryTertiaryEmotions = SorpresaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+        break;
+      case 'Nessuna':
+        temporarySecondaryEmotion = Nessuna.values.firstWhere((element) => element.toString() == secondaryEmotion);
+        temporaryTertiaryEmotions = NessunaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+        break;
+    }
+    return [temporarySecondaryEmotion, temporaryTertiaryEmotions];
   }
 
   Future<List<List<String>>> _loadTableState() async {
@@ -506,7 +546,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               DataRow(
                 cells: [
-                  DataCell(buildEmotionCell(row.emotion, row.secondaryEmotion, row.selectedTertiaryEmotions)),
+                  DataCell(buildEmotionCell(row.emotion, row.secondaryEmotion, row.tertiaryEmotions)),
                 ],
               ),
               DataRow(
