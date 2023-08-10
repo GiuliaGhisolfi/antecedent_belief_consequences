@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'home.dart';
-import 'savedata.dart';
+import 'src/home.dart';
+import 'src/savedata.dart';
 
 
 void main() {

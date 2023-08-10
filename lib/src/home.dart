@@ -4,15 +4,16 @@ import 'package:intl/intl.dart';
 //import 'package:geolocator/geolocator.dart';
 //import 'package:geocoding/geocoding.dart';
 
-import 'enum/emotions.dart';
-import 'enum/rabbia.dart';
-import 'enum/paura.dart';
-import 'enum/tristezza.dart';
-import 'enum/disgusto.dart';
-import 'enum/felicita.dart';
-import 'enum/sorpresa.dart';
+import '../enum/emotions.dart';
+import '../enum/rabbia.dart';
+import '../enum/paura.dart';
+import '../enum/tristezza.dart';
+import '../enum/disgusto.dart';
+import '../enum/felicita.dart';
+import '../enum/sorpresa.dart';
 import 'note.dart';
 import 'savedata.dart';
+import 'utils.dart';
 
 
 class MyHomePage extends StatefulWidget {
@@ -36,7 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
         rows = tableData.map((row) {
           dynamic temporarySecondaryEmotion;
           dynamic temporaryTertiaryEmotions;
-          [temporarySecondaryEmotion, temporaryTertiaryEmotions] = _emotionsFromRow(row[3], row[4], row[5]);
+          [temporarySecondaryEmotion, temporaryTertiaryEmotions] = emotionsFromRow(row[3], row[4], row[5]);
           return Note(
             antecedent: row[0],
             belief: row[1],
@@ -148,7 +149,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         //Text(row.currentPlace ?? ''),
                         //const SizedBox(width: 8),
-                        Text(DateFormat('EEEE, yyyy-MM-dd HH:mm').format(row.currentDateTime)),
+                        Text(DateFormat('EEEE, yyyy-MM-dd HH:mm').format(row.currentDateTime), 
+                                      style: const TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
                       ],
                     ),
                   ),
@@ -181,6 +183,86 @@ class _MyHomePageState extends State<MyHomePage> {
                 TextSpan(text: emotionText, style: const TextStyle(color: Colors.black)),
               ],
             ),);
+  }
+
+    void _showDialog() {
+    String antecedent = '';
+    String belief = '';
+    String consequence = '';
+    List<dynamic> selectedEmotions = [];
+    dynamic selectedEmotion = Emotion.values[0];
+    dynamic selectedSecondaryEmotion = Nessuna.values[0];
+    dynamic selectedTertiaryEmotions = Nessuna.values[0];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Inserisci il tuo stato d\'animo'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                onChanged: (value) => antecedent = value,
+                decoration: const InputDecoration(labelText: 'Antecedent: stimolo di partenza'),
+              ),
+              TextField(
+                onChanged: (value) => belief = value,
+                decoration: const InputDecoration(labelText: 'Belief: pensiero, convinzione'),
+              ),
+              TextField(
+                onChanged: (value) => consequence = value,
+                decoration: const InputDecoration(labelText: 'Consequence: emozioni'),
+              ),
+              const SizedBox(height: 10), // add an empty space
+              
+            ],
+          ),
+          actions: [
+            Align(
+              alignment: Alignment.centerRight,
+              child:Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                      onPressed: () async{
+                        selectedEmotions = await _addEmotion(); 
+                      },
+                      child: const Text('Inserisci emozione'),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (selectedEmotions.isNotEmpty) {
+                        setState(() {
+                            selectedEmotion = selectedEmotions[0];
+                            selectedSecondaryEmotion = selectedEmotions[1];
+                            selectedTertiaryEmotions = selectedEmotions[2];
+                          });
+                      }
+                      _addLine(antecedent, belief, consequence, selectedEmotion, selectedSecondaryEmotion, selectedTertiaryEmotions);
+                      final dataProvider = Provider.of<DataProvider>(context, listen: false);
+                      dataProvider.saveTableState(rows.map((row) 
+                                                  => [row.antecedent, 
+                                                  row.belief, 
+                                                  row.consequence, 
+                                                  row.emotion.toString(), 
+                                                  row.secondaryEmotion.toString(), 
+                                                  row.tertiaryEmotions.toString(),
+                                                  //row.currentPlace,
+                                                  row.currentDateTime
+                                                  ]).toList());
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Salva♡'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _addLine(String antecedent, String belief, String consequence, dynamic emotion, 
@@ -389,19 +471,8 @@ class _MyHomePageState extends State<MyHomePage> {
     return [selectedSecondaryEmotion, selectedTertiaryEmotion];
   }
 
-  List<dynamic> _getSelectableTertiaryEmotions(
-    int selectedEmotionIndex , List<dynamic> tertiaryEmotionList
-    ) {
-    final List<dynamic> selectableTertiaryEmotions = [];
-
-    selectableTertiaryEmotions.add(tertiaryEmotionList[selectedEmotionIndex * 2]);
-    selectableTertiaryEmotions.add(tertiaryEmotionList[selectedEmotionIndex * 2 + 1]);
-
-    return selectableTertiaryEmotions;
-  } 
-
   Future<dynamic> _addTertiaryEmotion(int selectedEmotionIndex, List<dynamic> tertiaryEmotionList) async{
-    List<dynamic> selectableTertiaryEmotions = _getSelectableTertiaryEmotions(
+    List<dynamic> selectableTertiaryEmotions = getSelectableTertiaryEmotions(
                       selectedEmotionIndex, tertiaryEmotionList);
     dynamic selectedTertiaryEmotion = selectableTertiaryEmotions[0];
 
@@ -462,127 +533,5 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     );
     return selectedTertiaryEmotion;
-  }
-
-  void _showDialog() {
-    String antecedent = '';
-    String belief = '';
-    String consequence = '';
-    List<dynamic> selectedEmotions = [];
-    dynamic selectedEmotion = Emotion.values[0];
-    dynamic selectedSecondaryEmotion = Nessuna.values[0];
-    dynamic selectedTertiaryEmotions = Nessuna.values[0];
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Inserisci il tuo stato d\'animo'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                onChanged: (value) => antecedent = value,
-                decoration: const InputDecoration(labelText: 'Antecedent: stimolo di partenza'),
-              ),
-              TextField(
-                onChanged: (value) => belief = value,
-                decoration: const InputDecoration(labelText: 'Belief: pensiero, convinzione'),
-              ),
-              TextField(
-                onChanged: (value) => consequence = value,
-                decoration: const InputDecoration(labelText: 'Consequence: emozioni'),
-              ),
-              const SizedBox(height: 10), // add an empty space
-              
-            ],
-          ),
-          actions: [
-            Align(
-              alignment: Alignment.centerRight,
-              child:Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                      onPressed: () async{
-                        selectedEmotions = await _addEmotion(); 
-                      },
-                      child: const Text('Inserisci emozione'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (selectedEmotions.isNotEmpty) {
-                        setState(() {
-                            selectedEmotion = selectedEmotions[0];
-                            selectedSecondaryEmotion = selectedEmotions[1];
-                            selectedTertiaryEmotions = selectedEmotions[2];
-                          });
-                      }
-                      _addLine(antecedent, belief, consequence, selectedEmotion, selectedSecondaryEmotion, selectedTertiaryEmotions);
-                      final dataProvider = Provider.of<DataProvider>(context, listen: false);
-                      dataProvider.saveTableState(rows.map((row) 
-                                                  => [row.antecedent, 
-                                                  row.belief, 
-                                                  row.consequence, 
-                                                  row.emotion.toString(), 
-                                                  row.secondaryEmotion.toString(), 
-                                                  row.tertiaryEmotions.toString(),
-                                                  //row.currentPlace,
-                                                  row.currentDateTime
-                                                  ]).toList());
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Salva♡'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  List<dynamic> _emotionsFromRow(String emotion, String secondaryEmotion, String tertiaryEmotions) {
-    dynamic temporarySecondaryEmotion;
-    dynamic temporaryTertiaryEmotions;
-    bool secondaryEmotionFlag = true;
-
-    if (secondaryEmotion == 'Nessuna emozione') {
-      temporarySecondaryEmotion = Nessuna.values[0];
-      secondaryEmotionFlag = false;
-    }
-    if (tertiaryEmotions == 'Nessuna emozione') {
-      temporaryTertiaryEmotions = Nessuna.values[0];
-    } else {
-      switch (emotion) {
-        case 'Rabbia':
-          if (secondaryEmotionFlag) temporarySecondaryEmotion = Rabbia.values.firstWhere((element) => element.toString() == secondaryEmotion);
-          temporaryTertiaryEmotions = RabbiaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-          break;
-        case 'Tristezza':
-          if (secondaryEmotionFlag) temporarySecondaryEmotion = Tristezza.values.firstWhere((element) => element.toString() == secondaryEmotion);
-          temporaryTertiaryEmotions = TristezzaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-          break;
-        case 'Paura':
-          if (secondaryEmotionFlag) temporarySecondaryEmotion = Paura.values.firstWhere((element) => element.toString() == secondaryEmotion);
-          temporaryTertiaryEmotions = PauraAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-          break;
-        case 'Disgusto':
-          if (secondaryEmotionFlag) temporarySecondaryEmotion = Disgusto.values.firstWhere((element) => element.toString() == secondaryEmotion);
-          temporaryTertiaryEmotions = DisgustoAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-          break;
-        case 'Felicità':
-          if (secondaryEmotionFlag) temporarySecondaryEmotion = Felicita.values.firstWhere((element) => element.toString() == secondaryEmotion);
-          temporaryTertiaryEmotions = FelicitaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-          break;
-        case 'Sorpresa':
-          if (secondaryEmotionFlag) temporarySecondaryEmotion = Sorpresa.values.firstWhere((element) => element.toString() == secondaryEmotion);
-          temporaryTertiaryEmotions = SorpresaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-          break;
-      }
-    }
-    return [temporarySecondaryEmotion, temporaryTertiaryEmotions];
   }
 }
