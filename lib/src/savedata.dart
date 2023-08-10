@@ -26,19 +26,10 @@ class DataProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> modifyRowFromTableState(Note row) async {
-    List rowList = rowToList(row);
-    List<List<String>> tableData = await loadTableState();
-    //TODO: codice per aprire dialogo con dati correnti e modificare
-    
-    await saveTableState(tableData);
-    notifyListeners();
-  }
-
   Future<void> deleteRowFromTableState(Note row) async {
     List rowList = rowToList(row);
     List<List<String>> tableData = await loadTableState();
-    tableData.removeWhere((tableData) => listEquals(tableData, rowList));
+    tableData.removeWhere((rows) => listEquals(rows, rowList));
     await saveTableState(tableData);
     // wait for save to complete
     await Future.delayed(const Duration(seconds: 1));

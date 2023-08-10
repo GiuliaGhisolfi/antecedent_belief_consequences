@@ -222,7 +222,13 @@ class _MyHomePageState extends State<MyHomePage> {
             ),);
   }
 
-    void _showDialog() {
+    void _showDialog(/*{String antecedent = '',
+                      String belief = '',
+                      String consequence = '',
+                      List<dynamic> selectedEmotions = const [],
+                      dynamic selectedEmotion = Emotion.nessuna,
+                      dynamic selectedSecondaryEmotion = Nessuna.nessuna,
+                      dynamic selectedTertiaryEmotions = Nessuna.nessuna}*/) {
     String antecedent = '';
     String belief = '';
     String consequence = '';
@@ -230,7 +236,6 @@ class _MyHomePageState extends State<MyHomePage> {
     dynamic selectedEmotion = Emotion.values[0];
     dynamic selectedSecondaryEmotion = Nessuna.values[0];
     dynamic selectedTertiaryEmotions = Nessuna.values[0];
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -593,14 +598,22 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   const SizedBox(height: 25),
                   /*ElevatedButton(
-                    onPressed: () {
-                      DataProvider dataProvider = Provider.of<DataProvider>(context, listen: false);
-                      dataProvider.modifyRowFromTableState(row);
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Modifica♡'),
-                  ),
+                      onPressed: () async {
+                        DataProvider dataProvider = Provider.of<DataProvider>(context, listen: false);
+                        await dataProvider.deleteRowFromTableState(row);
+                        _showDialog(
+                          antecedent: row.antecedent,
+                          belief: row.belief,
+                          consequence: row.consequence,
+                          selectedEmotions: [row.emotion, row.secondaryEmotion, row.tertiaryEmotions],
+                          selectedEmotion: row.emotion,
+                          selectedSecondaryEmotion: row.secondaryEmotion,
+                          selectedTertiaryEmotions: row.tertiaryEmotions,
+                        );
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Modifica♡'),
+                    ),
                   const SizedBox(height: 10),*/
                   ElevatedButton(
                     onPressed: () {
