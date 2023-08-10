@@ -25,12 +25,16 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<List<String>> tableData = [];
+  //List<List<String>> tableData = [];
   List<Note> rows = [];
 
   @override
   void initState() {
     super.initState();
+    _loadTableState();
+  }
+
+  void _loadTableState(){
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
     dataProvider.loadTableState().then((tableData) {
       setState(() {
@@ -63,21 +67,48 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Consumer<DataProvider>(
         builder: (context, dataProvider, child) {
-          return SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: rows.map((row) {
-                return buildSingleRowTable(row);
-              }).toList(),
-            ),
+          return FutureBuilder<List<List<String>>>(
+            future: dataProvider.loadTableState(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator(); // loading
+              } else if (snapshot.hasError) {
+                return const Text('Errore nel recupero dei dati'); // error handling
+              } else if (!snapshot.hasData || snapshot.data == null) {
+                return const Text('Nessun dato disponibile'); // error handling
+              } else {
+                List<List<String>> tableData = snapshot.data!;
+                return SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: tableData.map((row) {
+                      dynamic temporarySecondaryEmotion;
+                      dynamic temporaryTertiaryEmotions;
+                      [temporarySecondaryEmotion, temporaryTertiaryEmotions] = emotionsFromRow(row[3], row[4], row[5]);
+                      Note note = Note(
+                        antecedent: row[0],
+                        belief: row[1],
+                        consequence: row[2],
+                        emotion: Emotion.values.firstWhere((element) => element.toString() == row[3]),
+                        secondaryEmotion: temporarySecondaryEmotion,
+                        tertiaryEmotions: temporaryTertiaryEmotions,
+                        //currentPlace: row[6],
+                        currentDateTime: DateTime.parse(row[6])
+                      );
+                      return buildSingleRowTable(note);
+                    }).toList(),
+                  ),
+                );
+              }
+            },
           );
         },
       ),
 
       floatingActionButton: FloatingActionButton(
         onPressed: _showDialog,
-        tooltip: 'Add new line',
+        tooltip: 'Aggiungi♡',
         child: const Icon(Icons.add),
       ),
     );
@@ -288,7 +319,6 @@ class _MyHomePageState extends State<MyHomePage> {
       currentPosition.latitude, currentPosition.longitude);
     String? currentPlace = placemarks.isNotEmpty ? placemarks[0].locality : '';*/
     DateTime currentDateTime = DateTime.now();
-    
     setState(() {
       rows.add(Note(
         antecedent: antecedent,
@@ -301,6 +331,7 @@ class _MyHomePageState extends State<MyHomePage> {
         currentDateTime: currentDateTime
       ));
     });
+  _loadTableState(); 
   }
 
   Future<List<dynamic>> _addEmotion() async {
@@ -554,12 +585,13 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           insetPadding: const EdgeInsets.fromLTRB(0, 250, 0, 0),
-          title: const Text('Scegli azione'),
+          //title: const Text('Scegli azione'),
           actions: [
             Align(
               alignment: Alignment.center,
               child:Column(
                 children: [
+                  const SizedBox(height: 25),
                   /*ElevatedButton(
                     onPressed: () {
                       DataProvider dataProvider = Provider.of<DataProvider>(context, listen: false);
