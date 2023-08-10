@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'note.dart';
 
 class DataProvider extends ChangeNotifier {
 
@@ -26,5 +28,34 @@ class DataProvider extends ChangeNotifier {
     } else {
       return [];
     }
-  } 
+  }
+
+  Future<void> modifyRowFromTableState(Note row) async {
+    List rowList = rowToList(row);
+    List<List<String>> tableData = await loadTableState();
+    //TODO: codice per aprire dialogo con dati correnti e modificare
+    
+    await saveTableState(tableData);
+    notifyListeners();
+  }
+
+  Future<void> deleteRowFromTableState(Note row) async {
+    List rowList = rowToList(row);
+    List<List<String>> tableData = await loadTableState();
+    tableData.removeWhere((tableData) => listEquals(tableData, rowList));
+    await saveTableState(tableData);
+    notifyListeners();
+  }
+}
+
+List rowToList(Note row) {
+  return [row.antecedent, 
+          row.belief, 
+          row.consequence, 
+          row.emotion.toString(), 
+          row.secondaryEmotion.toString(), 
+          row.tertiaryEmotions.toString(),
+          //row.currentPlace,
+          row.currentDateTime.toString()
+          ];
 }

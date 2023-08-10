@@ -61,14 +61,18 @@ class _MyHomePageState extends State<MyHomePage> {
               fontSize: 19), textWidthBasis: TextWidthBasis.longestLine),
         backgroundColor: const Color.fromARGB(255, 179, 220, 245),
       ),
-      body: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: rows.map((row) {
-            return buildSingleRowTable(row);
-          }).toList(),
-        ),
+      body: Consumer<DataProvider>(
+        builder: (context, dataProvider, child) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: rows.map((row) {
+                return buildSingleRowTable(row);
+              }).toList(),
+            ),
+          );
+        },
       ),
 
       floatingActionButton: FloatingActionButton(
@@ -80,84 +84,86 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget buildSingleRowTable(Note row) {
-    return IntrinsicHeight(
-      child: Container(
-        child:Card(
-          color: const Color.fromARGB(255, 201, 230, 248),
-          child: DataTable(
-            columns: const <DataColumn>[
-              DataColumn(label: Text('Stato d\'animo ♡')),
-            ],
-            rows: [
-              DataRow(
-                cells: [
-                  DataCell(Tooltip(
-                    message: row.antecedent,
-                    child: Text.rich(
-                      TextSpan(
-                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
-                        children: <TextSpan>[
-                          const TextSpan(text: 'Antecedent: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
-                          TextSpan(text: ' ${row.antecedent}', style: const TextStyle(color: Colors.black)),
-                        ],
-                      ),
-                    )
-                  ))
-                ],
-              ),
-              DataRow(
-                cells: [
-                  DataCell(Tooltip(
-                    message: row.belief,
-                    child: Text.rich(
-                      TextSpan(
-                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
-                        children: <TextSpan>[
-                          const TextSpan(text: 'Belief: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
-                          TextSpan(text: ' ${row.belief}', style: const TextStyle(color: Colors.black)),
-                        ],
-                      ),
-                    )
-                  ))
-                ],
-              ),
-              DataRow(
-                cells: [
-                  DataCell(Tooltip(
-                    message: row.consequence,
-                    child: Text.rich(
-                      TextSpan(
-                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
-                        children: <TextSpan>[
-                          const TextSpan(text: 'Consequence: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
-                          TextSpan(text: ' ${row.consequence}', style: const TextStyle(color: Colors.black)),
-                        ],
-                      ),
-                    )
-                  ))
-                ],
-              ),
-              DataRow(
-                cells: [
-                  DataCell(buildEmotionCell(row.emotion, row.secondaryEmotion, row.tertiaryEmotions)),
-                ],
-              ),
-              DataRow(
-                cells: [
-                  DataCell(
-                    Row(
-                      children: [
-                        //Text(row.currentPlace ?? ''),
-                        //const SizedBox(width: 8),
-                        Text(DateFormat('EEEE, yyyy-MM-dd HH:mm').format(row.currentDateTime), 
-                                      style: const TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+    return Card(
+      color: const Color.fromARGB(255, 201, 230, 248),
+      clipBehavior: Clip.hardEdge,
+      child: InkWell(
+        onLongPress: () {
+          _showModifyDeleteDialog(row);
+        },
+        child: DataTable(
+          columns: const <DataColumn>[
+            DataColumn(label: Text('Stato d\'animo ♡')),
+          ],
+          rows: [
+            DataRow(
+              cells: [
+                DataCell(Tooltip(
+                  message: row.antecedent,
+                  child: Text.rich(
+                    TextSpan(
+                      style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+                      children: <TextSpan>[
+                        const TextSpan(text: 'Antecedent: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                        TextSpan(text: ' ${row.antecedent}', style: const TextStyle(color: Colors.black)),
                       ],
                     ),
+                  )
+                ))
+              ],
+            ),
+            DataRow(
+              cells: [
+                DataCell(Tooltip(
+                  message: row.belief,
+                  child: Text.rich(
+                    TextSpan(
+                      style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+                      children: <TextSpan>[
+                        const TextSpan(text: 'Belief: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                        TextSpan(text: ' ${row.belief}', style: const TextStyle(color: Colors.black)),
+                      ],
+                    ),
+                  )
+                ))
+              ],
+            ),
+            DataRow(
+              cells: [
+                DataCell(Tooltip(
+                  message: row.consequence,
+                  child: Text.rich(
+                    TextSpan(
+                      style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+                      children: <TextSpan>[
+                        const TextSpan(text: 'Consequence: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                        TextSpan(text: ' ${row.consequence}', style: const TextStyle(color: Colors.black)),
+                      ],
+                    ),
+                  )
+                ))
+              ],
+            ),
+            DataRow(
+              cells: [
+                DataCell(buildEmotionCell(row.emotion, row.secondaryEmotion, row.tertiaryEmotions)),
+              ],
+            ),
+            DataRow(
+              cells: [
+                DataCell(
+                  Row(
+                    children: [
+                      //Text(row.currentPlace ?? ''),
+                      //const SizedBox(width: 8),
+                      Text(DateFormat('EEEE dd-MM-yyyy, HH:mm').format(row.currentDateTime), 
+                                    style: const TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                    ],
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -255,6 +261,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       Navigator.of(context).pop();
                     },
                     child: const Text('Salva♡'),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Annulla'),
                   ),
                 ],
               ),
@@ -533,5 +546,51 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     );
     return selectedTertiaryEmotion;
+  }
+
+  void _showModifyDeleteDialog(Note row) {
+    showDialog(
+      context: context, 
+      builder: (BuildContext context) {
+        return AlertDialog(
+          insetPadding: const EdgeInsets.fromLTRB(0, 250, 0, 0),
+          title: const Text('Scegli azione'),
+          actions: [
+            Align(
+              alignment: Alignment.center,
+              child:Column(
+                children: [
+                  /*ElevatedButton(
+                    onPressed: () {
+                      DataProvider dataProvider = Provider.of<DataProvider>(context, listen: false);
+                      dataProvider.modifyRowFromTableState(row);
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Modifica♡'),
+                  ),
+                  const SizedBox(height: 10),*/
+                  ElevatedButton(
+                    onPressed: () {
+                      DataProvider dataProvider = Provider.of<DataProvider>(context, listen: false);
+                      dataProvider.deleteRowFromTableState(row);
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Elimina'),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Annulla'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }
+    );
   }
 }
