@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 //import 'package:geolocator/geolocator.dart';
 //import 'package:geocoding/geocoding.dart';
@@ -26,6 +26,162 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<List<String>> tableData = [];
   List<Note> rows = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    dataProvider.loadTableState().then((tableData) {
+      setState(() {
+        rows = tableData.map((row) {
+          dynamic temporarySecondaryEmotion;
+          dynamic temporaryTertiaryEmotions;
+          [temporarySecondaryEmotion, temporaryTertiaryEmotions] = _emotionsFromRow(row[3], row[4], row[5]);
+          return Note(
+            antecedent: row[0],
+            belief: row[1],
+            consequence: row[2],
+            emotion: Emotion.values.firstWhere((element) => element.toString() == row[3]),
+            secondaryEmotion: temporarySecondaryEmotion,
+            tertiaryEmotions: temporaryTertiaryEmotions,
+            //currentPlace: row[6],
+            currentDateTime: DateTime.parse(row[6])
+          );
+        }).toList();
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Antecedent, Belief, Consequence', style: TextStyle(
+              fontSize: 19), textWidthBasis: TextWidthBasis.longestLine),
+        backgroundColor: const Color.fromARGB(255, 179, 220, 245),
+      ),
+      body: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: rows.map((row) {
+            return buildSingleRowTable(row);
+          }).toList(),
+        ),
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showDialog,
+        tooltip: 'Add new line',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget buildSingleRowTable(Note row) {
+    return IntrinsicHeight(
+      child: Container(
+        child:Card(
+          color: const Color.fromARGB(255, 201, 230, 248),
+          child: DataTable(
+            columns: const <DataColumn>[
+              DataColumn(label: Text('Stato d\'animo ♡')),
+            ],
+            rows: [
+              DataRow(
+                cells: [
+                  DataCell(Tooltip(
+                    message: row.antecedent,
+                    child: Text.rich(
+                      TextSpan(
+                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+                        children: <TextSpan>[
+                          const TextSpan(text: 'Antecedent: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                          TextSpan(text: ' ${row.antecedent}', style: const TextStyle(color: Colors.black)),
+                        ],
+                      ),
+                    )
+                  ))
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(Tooltip(
+                    message: row.belief,
+                    child: Text.rich(
+                      TextSpan(
+                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+                        children: <TextSpan>[
+                          const TextSpan(text: 'Belief: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                          TextSpan(text: ' ${row.belief}', style: const TextStyle(color: Colors.black)),
+                        ],
+                      ),
+                    )
+                  ))
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(Tooltip(
+                    message: row.consequence,
+                    child: Text.rich(
+                      TextSpan(
+                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+                        children: <TextSpan>[
+                          const TextSpan(text: 'Consequence: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                          TextSpan(text: ' ${row.consequence}', style: const TextStyle(color: Colors.black)),
+                        ],
+                      ),
+                    )
+                  ))
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(buildEmotionCell(row.emotion, row.secondaryEmotion, row.tertiaryEmotions)),
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(
+                    Row(
+                      children: [
+                        //Text(row.currentPlace ?? ''),
+                        //const SizedBox(width: 8),
+                        Text(DateFormat('EEEE, yyyy-MM-dd HH:mm:ss').format(row.currentDateTime)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildEmotionCell(dynamic emotion, dynamic secondaryEmotion, dynamic tertiaryEmotions) {
+    String emotionText = '';
+    if (emotion == Emotion.nessuna) {
+      emotionText = 'Nessuna emozione inserita';
+      return Text(emotionText, style: const TextStyle(color: Color.fromARGB(255, 119, 187, 230)));
+    } else if (secondaryEmotion == Nessuna.nessuna) {
+      emotionText = '$emotion';
+    } else if (tertiaryEmotions == Nessuna.nessuna) {
+      emotionText = '$emotion, $secondaryEmotion';
+    } else {
+      emotionText = '$emotion, $secondaryEmotion, $tertiaryEmotions';
+    }
+
+    return Text.rich(TextSpan(
+              style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+              children: <TextSpan>[
+                const TextSpan(text: 'Emozione: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+                TextSpan(text: emotionText, style: const TextStyle(color: Colors.black)),
+              ],
+            ),);
+  }
 
   void _addLine(String antecedent, String belief, String consequence, dynamic emotion, 
     dynamic secondaryEmotion, dynamic selectedTertiaryEmotions) async{
@@ -308,14 +464,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return selectedTertiaryEmotion;
   }
 
-  Future<void> _saveTableState(List<List<String>> tableData) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<List<String>> serializedTable = tableData.map((row) => row.toList()).toList();
-
-    // save table state
-    prefs.setStringList('tableData', serializedTable.map((row) => row.join(',')).toList());
-  }
-
   void _showDialog() {
     String antecedent = '';
     String belief = '';
@@ -372,8 +520,16 @@ class _MyHomePageState extends State<MyHomePage> {
                           });
                       }
                       _addLine(antecedent, belief, consequence, selectedEmotion, selectedSecondaryEmotion, selectedTertiaryEmotions);
-                      _saveTableState(rows.map((row) => [row.antecedent, row.belief, row.consequence, row.emotion.toString(), 
-                        row.secondaryEmotion.toString(), row.tertiaryEmotions.toString()]).toList());
+                      final dataProvider = Provider.of<DataProvider>(context, listen: false);
+                      dataProvider.saveTableState(rows.map((row) 
+                                                  => [row.antecedent, 
+                                                  row.belief, 
+                                                  row.consequence, 
+                                                  row.emotion.toString(), 
+                                                  row.secondaryEmotion.toString(), 
+                                                  row.tertiaryEmotions.toString(),
+                                                  row.currentDateTime
+                                                  ]).toList());
                       Navigator.of(context).pop();
                     },
                     child: const Text('Salva♡'),
@@ -387,207 +543,45 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadTableState().then((tableData) {
-      setState(() {
-        rows = tableData.map((row) {
-          dynamic temporarySecondaryEmotion;
-          dynamic temporaryTertiaryEmotions;
-          [temporarySecondaryEmotion, temporaryTertiaryEmotions] = _emotionsFromRow(row[3], row[4], row[5]);
-          return Note(
-            antecedent: row[0],
-            belief: row[1],
-            consequence: row[2],
-            emotion: Emotion.values.firstWhere((element) => element.toString() == row[3]),
-            secondaryEmotion: temporarySecondaryEmotion,
-            tertiaryEmotions: temporaryTertiaryEmotions,
-            //currentPlace: row[6],
-            currentDateTime: DateTime.parse(row[6])
-          );
-        }).toList();
-      });
-    });
-  }
-
   List<dynamic> _emotionsFromRow(String emotion, String secondaryEmotion, String tertiaryEmotions) {
     dynamic temporarySecondaryEmotion;
     dynamic temporaryTertiaryEmotions;
-    switch (emotion) {
-      case 'Rabbia':
-        temporarySecondaryEmotion = Rabbia.values.firstWhere((element) => element.toString() == secondaryEmotion);
-        temporaryTertiaryEmotions = RabbiaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-        break;
-      case 'Tristezza':
-        temporarySecondaryEmotion = Tristezza.values.firstWhere((element) => element.toString() == secondaryEmotion);
-        temporaryTertiaryEmotions = TristezzaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-        break;
-      case 'Paura':
-        temporarySecondaryEmotion = Paura.values.firstWhere((element) => element.toString() == secondaryEmotion);
-        temporaryTertiaryEmotions = PauraAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-        break;
-      case 'Disgusto':
-        temporarySecondaryEmotion = Disgusto.values.firstWhere((element) => element.toString() == secondaryEmotion);
-        temporaryTertiaryEmotions = DisgustoAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-        break;
-      case 'Felicità':
-        temporarySecondaryEmotion = Felicita.values.firstWhere((element) => element.toString() == secondaryEmotion);
-        temporaryTertiaryEmotions = FelicitaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-        break;
-      case 'Sorpresa':
-        temporarySecondaryEmotion = Sorpresa.values.firstWhere((element) => element.toString() == secondaryEmotion);
-        temporaryTertiaryEmotions = SorpresaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-        break;
-      case 'Nessuna':
-        temporarySecondaryEmotion = Nessuna.values.firstWhere((element) => element.toString() == secondaryEmotion);
-        temporaryTertiaryEmotions = NessunaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
-        break;
+    bool secondaryEmotionFlag = true;
+
+    if (secondaryEmotion == 'Nessuna emozione') {
+      temporarySecondaryEmotion = Nessuna.values[0];
+      secondaryEmotionFlag = false;
+    }
+    if (tertiaryEmotions == 'Nessuna emozione') {
+      temporaryTertiaryEmotions = Nessuna.values[0];
+    } else {
+      switch (emotion) {
+        case 'Rabbia':
+          if (secondaryEmotionFlag) temporarySecondaryEmotion = Rabbia.values.firstWhere((element) => element.toString() == secondaryEmotion);
+          temporaryTertiaryEmotions = RabbiaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+          break;
+        case 'Tristezza':
+          if (secondaryEmotionFlag) temporarySecondaryEmotion = Tristezza.values.firstWhere((element) => element.toString() == secondaryEmotion);
+          temporaryTertiaryEmotions = TristezzaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+          break;
+        case 'Paura':
+          if (secondaryEmotionFlag) temporarySecondaryEmotion = Paura.values.firstWhere((element) => element.toString() == secondaryEmotion);
+          temporaryTertiaryEmotions = PauraAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+          break;
+        case 'Disgusto':
+          if (secondaryEmotionFlag) temporarySecondaryEmotion = Disgusto.values.firstWhere((element) => element.toString() == secondaryEmotion);
+          temporaryTertiaryEmotions = DisgustoAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+          break;
+        case 'Felicità':
+          if (secondaryEmotionFlag) temporarySecondaryEmotion = Felicita.values.firstWhere((element) => element.toString() == secondaryEmotion);
+          temporaryTertiaryEmotions = FelicitaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+          break;
+        case 'Sorpresa':
+          if (secondaryEmotionFlag) temporarySecondaryEmotion = Sorpresa.values.firstWhere((element) => element.toString() == secondaryEmotion);
+          temporaryTertiaryEmotions = SorpresaAssociated.values.firstWhere((element) => element.toString() == tertiaryEmotions);
+          break;
+      }
     }
     return [temporarySecondaryEmotion, temporaryTertiaryEmotions];
-  }
-
-  Future<List<List<String>>> _loadTableState() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String>? serializedTable = prefs.getStringList('tableData');
-
-    // return previously table state (if not null)
-    if (serializedTable != null) {
-      List<List<String>> tableData = serializedTable.map((row) => row.split(',')).toList();
-      return tableData;
-    } else {
-      return [];
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Antecedent, Belief, Consequence', style: TextStyle(
-              fontSize: 19), textWidthBasis: TextWidthBasis.longestLine),
-        backgroundColor: const Color.fromARGB(255, 179, 220, 245),
-      ),
-      body: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: rows.map((row) {
-            return buildSingleRowTable(row);
-          }).toList(),
-        ),
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showDialog,
-        tooltip: 'Add new line',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-  Widget buildSingleRowTable(Note row) {
-    return IntrinsicHeight(
-      child: Container(
-        child:Card(
-          color: const Color.fromARGB(255, 201, 230, 248),
-          child: DataTable(
-            columns: const <DataColumn>[
-              DataColumn(label: Text('Stato d\'animo ♡')),
-            ],
-            rows: [
-              DataRow(
-                cells: [
-                  DataCell(Tooltip(
-                    message: row.antecedent,
-                    child: Text.rich(
-                      TextSpan(
-                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
-                        children: <TextSpan>[
-                          const TextSpan(text: 'Antecedent: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
-                          TextSpan(text: ' ${row.antecedent}', style: const TextStyle(color: Colors.black)),
-                        ],
-                      ),
-                    )
-                  ))
-                ],
-              ),
-              DataRow(
-                cells: [
-                  DataCell(Tooltip(
-                    message: row.belief,
-                    child: Text.rich(
-                      TextSpan(
-                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
-                        children: <TextSpan>[
-                          const TextSpan(text: 'Belief: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
-                          TextSpan(text: ' ${row.belief}', style: const TextStyle(color: Colors.black)),
-                        ],
-                      ),
-                    )
-                  ))
-                ],
-              ),
-              DataRow(
-                cells: [
-                  DataCell(Tooltip(
-                    message: row.consequence,
-                    child: Text.rich(
-                      TextSpan(
-                        style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
-                        children: <TextSpan>[
-                          const TextSpan(text: 'Consequence: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
-                          TextSpan(text: ' ${row.consequence}', style: const TextStyle(color: Colors.black)),
-                        ],
-                      ),
-                    )
-                  ))
-                ],
-              ),
-              DataRow(
-                cells: [
-                  DataCell(buildEmotionCell(row.emotion, row.secondaryEmotion, row.tertiaryEmotions)),
-                ],
-              ),
-              DataRow(
-                cells: [
-                  DataCell(
-                    Row(
-                      children: [
-                        //Text(row.currentPlace ?? ''),
-                        //const SizedBox(width: 8),
-                        Text(DateFormat('EEEE, yyyy-MM-dd HH:mm:ss').format(row.currentDateTime)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildEmotionCell(dynamic emotion, dynamic secondaryEmotion, dynamic tertiaryEmotions) {
-    String emotionText = '';
-    if (emotion == Emotion.nessuna) {
-      emotionText = 'Nessuna emozione inserita';
-      return Text(emotionText, style: const TextStyle(color: Color.fromARGB(255, 119, 187, 230)));
-    } else if (secondaryEmotion == Nessuna.nessuna) {
-      emotionText = '$emotion';
-    } else if (tertiaryEmotions == Nessuna.nessuna) {
-      emotionText = '$emotion, $secondaryEmotion';
-    } else {
-      emotionText = '$emotion, $secondaryEmotion, $tertiaryEmotions';
-    }
-
-    return Text.rich(TextSpan(
-              style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
-              children: <TextSpan>[
-                const TextSpan(text: 'Emozione: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
-                TextSpan(text: emotionText, style: const TextStyle(color: Colors.black)),
-              ],
-            ),);
   }
 }
