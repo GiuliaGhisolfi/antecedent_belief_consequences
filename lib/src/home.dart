@@ -198,11 +198,11 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _showDialog({String antecedent = '',
+  Future<void> _showDialog({String antecedent = '',
                     String belief = '',
                     String consequence = '',
                     List<dynamic> selectedEmotions = const [Emotion.nessuna, Nessuna.nessuna, Nessuna.nessuna],
-                    }) {
+                    }) async{
     dynamic selectedEmotion = selectedEmotions[0];
     dynamic selectedSecondaryEmotion = selectedEmotions[1];
     dynamic selectedTertiaryEmotions = selectedEmotions[2];
@@ -318,8 +318,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   const SizedBox(height: 25),
                   ElevatedButton(
-                    onPressed: () async {
-                      _showDialog(
+                    onPressed: () async{
+                      await _showDialog(
                         antecedent: row.antecedent,
                         belief: row.belief,
                         consequence: row.consequence,
@@ -328,9 +328,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       if (_dialogCompleted) {
                         DataProvider dataProvider = Provider.of<DataProvider>(context, listen: false);
                         dataProvider.deleteRowFromTableState(row);
-                      }},
-                      child: const Text('Modifica♡'),
-                    ),
+                        Navigator.of(currentContext).pop();
+                      }
+                    },
+                    child: const Text('Modifica♡'),
+                  ),
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
