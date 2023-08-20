@@ -5,6 +5,7 @@ import '../enum/tristezza.dart';
 import '../enum/disgusto.dart';
 import '../enum/felicita.dart';
 import '../enum/sorpresa.dart';
+import 'package:flutter/material.dart';
 
 List<dynamic> emotionsFromRow(String emotion, String secondaryEmotion, String tertiaryEmotions) {
   dynamic temporarySecondaryEmotion;
@@ -58,3 +59,26 @@ List<dynamic> getSelectableTertiaryEmotions(
 
   return selectableTertiaryEmotions;
 } 
+
+Widget buildEmotionCell(dynamic emotion, dynamic secondaryEmotion, dynamic tertiaryEmotions) {
+  String emotionText = buildEmotionText(emotion, secondaryEmotion, tertiaryEmotions);
+  return Text.rich(TextSpan(
+            style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
+            children: <TextSpan>[
+              const TextSpan(text: 'Emozione: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
+              TextSpan(text: emotionText, style: const TextStyle(color: Colors.black)),
+            ],
+          ),);
+}
+
+String buildEmotionText(dynamic emotion, dynamic secondaryEmotion, dynamic tertiaryEmotions) {
+  if (emotion == Emotion.nessuna) {
+    return  'Nessuna emozione inserita';
+  } else if (secondaryEmotion == Nessuna.nessuna) {
+    return '$emotion';
+  } else if (tertiaryEmotions == Nessuna.nessuna) {
+    return '$emotion, $secondaryEmotion';
+  } else {
+    return  '$emotion, $secondaryEmotion, $tertiaryEmotions';
+  }
+}

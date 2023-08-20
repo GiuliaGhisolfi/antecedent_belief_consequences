@@ -25,36 +25,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  //List<List<String>> tableData = [];
   List<Note> rows = [];
+  bool _dialogCompleted = false;
 
   @override
   void initState() {
     super.initState();
     _loadTableState();
-  }
-
-  void _loadTableState(){
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    dataProvider.loadTableState().then((tableData) {
-      setState(() {
-        rows = tableData.map((row) {
-          dynamic temporarySecondaryEmotion;
-          dynamic temporaryTertiaryEmotions;
-          [temporarySecondaryEmotion, temporaryTertiaryEmotions] = emotionsFromRow(row[3], row[4], row[5]);
-          return Note(
-            antecedent: row[0],
-            belief: row[1],
-            consequence: row[2],
-            emotion: Emotion.values.firstWhere((element) => element.toString() == row[3]),
-            secondaryEmotion: temporarySecondaryEmotion,
-            tertiaryEmotions: temporaryTertiaryEmotions,
-            //currentPlace: row[6],
-            currentDateTime: DateTime.parse(row[6])
-          );
-        }).toList();
-      });
-    });
   }
 
   @override
@@ -96,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         //currentPlace: row[6],
                         currentDateTime: DateTime.parse(row[6])
                       );
-                      return buildSingleRowTable(note);
+                      return buildNewCardFromRow(note);
                     }).toList(),
                   ),
                 );
@@ -114,7 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget buildSingleRowTable(Note row) {
+  Card buildNewCardFromRow(Note row) {
     return Card(
       color: const Color.fromARGB(255, 201, 230, 248),
       clipBehavior: Clip.hardEdge,
@@ -185,8 +162,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 DataCell(
                   Row(
                     children: [
-                      //Text(row.currentPlace ?? ''),
-                      //const SizedBox(width: 8),
                       Text(DateFormat('EEEE dd-MM-yyyy, HH:mm').format(row.currentDateTime), 
                                     style: const TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
                     ],
@@ -200,42 +175,44 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget buildEmotionCell(dynamic emotion, dynamic secondaryEmotion, dynamic tertiaryEmotions) {
-    String emotionText = '';
-    if (emotion == Emotion.nessuna) {
-      emotionText = 'Nessuna emozione inserita';
-      return Text(emotionText, style: const TextStyle(color: Color.fromARGB(255, 119, 187, 230)));
-    } else if (secondaryEmotion == Nessuna.nessuna) {
-      emotionText = '$emotion';
-    } else if (tertiaryEmotions == Nessuna.nessuna) {
-      emotionText = '$emotion, $secondaryEmotion';
-    } else {
-      emotionText = '$emotion, $secondaryEmotion, $tertiaryEmotions';
-    }
-
-    return Text.rich(TextSpan(
-              style: const TextStyle(color: Color.fromARGB(255, 150, 208, 245)),
-              children: <TextSpan>[
-                const TextSpan(text: 'Emozione: ', style: TextStyle(color: Color.fromARGB(255, 119, 187, 230))),
-                TextSpan(text: emotionText, style: const TextStyle(color: Colors.black)),
-              ],
-            ),);
+  void _loadTableState(){
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    dataProvider.loadTableState().then((tableData) {
+      setState(() {
+        rows = tableData.map((row) {
+          dynamic temporarySecondaryEmotion;
+          dynamic temporaryTertiaryEmotions;
+          [temporarySecondaryEmotion, temporaryTertiaryEmotions] = emotionsFromRow(row[3], row[4], row[5]);
+          return Note(
+            antecedent: row[0],
+            belief: row[1],
+            consequence: row[2],
+            emotion: Emotion.values.firstWhere((element) => element.toString() == row[3]),
+            secondaryEmotion: temporarySecondaryEmotion,
+            tertiaryEmotions: temporaryTertiaryEmotions,
+            //currentPlace: row[6],
+            currentDateTime: DateTime.parse(row[6])
+          );
+        }).toList();
+      });
+    });
   }
 
-    void _showDialog(/*{String antecedent = '',
-                      String belief = '',
-                      String consequence = '',
-                      List<dynamic> selectedEmotions = const [],
-                      dynamic selectedEmotion = Emotion.nessuna,
-                      dynamic selectedSecondaryEmotion = Nessuna.nessuna,
-                      dynamic selectedTertiaryEmotions = Nessuna.nessuna}*/) {
-    String antecedent = '';
-    String belief = '';
-    String consequence = '';
-    List<dynamic> selectedEmotions = [];
-    dynamic selectedEmotion = Emotion.values[0];
-    dynamic selectedSecondaryEmotion = Nessuna.values[0];
-    dynamic selectedTertiaryEmotions = Nessuna.values[0];
+  void _showDialog({String antecedent = '',
+                    String belief = '',
+                    String consequence = '',
+                    List<dynamic> selectedEmotions = const [Emotion.nessuna, Nessuna.nessuna, Nessuna.nessuna],
+                    }) {
+    dynamic selectedEmotion = selectedEmotions[0];
+    dynamic selectedSecondaryEmotion = selectedEmotions[1];
+    dynamic selectedTertiaryEmotions = selectedEmotions[2];
+
+    TextEditingController antecedentController = TextEditingController(text: antecedent);
+    TextEditingController beliefController = TextEditingController(text: belief);
+    TextEditingController consequenceController = TextEditingController(text: consequence);
+    TextEditingController emotionController = TextEditingController(text: 
+                        buildEmotionText(selectedEmotion, selectedSecondaryEmotion, selectedTertiaryEmotions));
+    _dialogCompleted = false;
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -245,19 +222,26 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
+                controller: antecedentController,
                 onChanged: (value) => antecedent = value,
                 decoration: const InputDecoration(labelText: 'Antecedent: stimolo di partenza'),
               ),
               TextField(
+                controller: beliefController,
                 onChanged: (value) => belief = value,
                 decoration: const InputDecoration(labelText: 'Belief: pensiero, convinzione'),
               ),
               TextField(
+                controller: consequenceController,
                 onChanged: (value) => consequence = value,
                 decoration: const InputDecoration(labelText: 'Consequence: emozioni'),
               ),
+              TextField(
+                controller: emotionController,
+                readOnly: true, // non modifiable text field
+                decoration: const InputDecoration(labelText: 'Emozioni selezionate:'),
+              ),
               const SizedBox(height: 10), // add an empty space
-              
             ],
           ),
           actions: [
@@ -268,7 +252,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   ElevatedButton(
                       onPressed: () async{
-                        selectedEmotions = await _addEmotion(); 
+                        selectedEmotions = await _addEmotion();
+                        setState(() {
+                          emotionController.text = buildEmotionText(
+                            selectedEmotions[0], selectedEmotions[1], selectedEmotions[2]);
+                        });
                       },
                       child: const Text('Inserisci emozione'),
                   ),
@@ -294,6 +282,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                                   //row.currentPlace,
                                                   row.currentDateTime
                                                   ]).toList());
+                      _dialogCompleted = true;
                       Navigator.of(context).pop();
                     },
                     child: const Text('Salva♡'),
@@ -311,6 +300,59 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         );
       },
+    );
+  }
+
+  void _showModifyDeleteDialog(Note row) {
+    final currentContext = context; // save current context
+    showDialog(
+      context: context, 
+      builder: (BuildContext context) {
+        return AlertDialog(
+          insetPadding: const EdgeInsets.fromLTRB(0, 250, 0, 0),
+          //title: const Text('Scegli azione'),
+          actions: [
+            Align(
+              alignment: Alignment.center,
+              child:Column(
+                children: [
+                  const SizedBox(height: 25),
+                  ElevatedButton(
+                    onPressed: () async {
+                      _showDialog(
+                        antecedent: row.antecedent,
+                        belief: row.belief,
+                        consequence: row.consequence,
+                        selectedEmotions: [row.emotion, row.secondaryEmotion, row.tertiaryEmotions],
+                      );
+                      if (_dialogCompleted) {
+                        DataProvider dataProvider = Provider.of<DataProvider>(context, listen: false);
+                        dataProvider.deleteRowFromTableState(row);
+                      }},
+                      child: const Text('Modifica♡'),
+                    ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      DataProvider dataProvider = Provider.of<DataProvider>(currentContext, listen: false);
+                      dataProvider.deleteRowFromTableState(row);
+                      Navigator.of(currentContext).pop();
+                    },
+                    child: const Text('Elimina'),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(currentContext).pop();
+                    },
+                    child: const Text('Annulla'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }
     );
   }
 
@@ -582,60 +624,5 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     );
     return selectedTertiaryEmotion;
-  }
-
-  void _showModifyDeleteDialog(Note row) {
-    showDialog(
-      context: context, 
-      builder: (BuildContext context) {
-        return AlertDialog(
-          insetPadding: const EdgeInsets.fromLTRB(0, 250, 0, 0),
-          //title: const Text('Scegli azione'),
-          actions: [
-            Align(
-              alignment: Alignment.center,
-              child:Column(
-                children: [
-                  const SizedBox(height: 25),
-                  /*ElevatedButton(
-                      onPressed: () async {
-                        DataProvider dataProvider = Provider.of<DataProvider>(context, listen: false);
-                        await dataProvider.deleteRowFromTableState(row);
-                        _showDialog(
-                          antecedent: row.antecedent,
-                          belief: row.belief,
-                          consequence: row.consequence,
-                          selectedEmotions: [row.emotion, row.secondaryEmotion, row.tertiaryEmotions],
-                          selectedEmotion: row.emotion,
-                          selectedSecondaryEmotion: row.secondaryEmotion,
-                          selectedTertiaryEmotions: row.tertiaryEmotions,
-                        );
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Modifica♡'),
-                    ),
-                  const SizedBox(height: 10),*/
-                  ElevatedButton(
-                    onPressed: () {
-                      DataProvider dataProvider = Provider.of<DataProvider>(context, listen: false);
-                      dataProvider.deleteRowFromTableState(row);
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Elimina'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Annulla'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      }
-    );
   }
 }
